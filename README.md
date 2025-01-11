@@ -1,6 +1,9 @@
 # What is this repo?
 _Note: this tutorial is an education purpose only_
 
+This tutorial teaches how to use ELK stack with local LLama to create a GenAI application.
+It leverages Logstash power to generate embeddings and Elasticsearch to store embeddings and use as a vector database.
+
 # References
 - For kNN search see https://www.elastic.co/search-labs/tutorials/search-tutorial/welcome
 

@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <!--
+    KNN search
+    <form method="POST" action="{{ url_for('handle_search') }}">
+      <div class="mb-3">
+          <input type="text" class="form-control" name="query" id="query" placeholder="Enter your search query" value="{{ query }}" autofocus>
+      </div>
+    </form>
+    -->
+    <form method="POST" action="{{ url_for('handle_llm_search') }}">
+        <div class="mb-3">
+            <input type="text" class="form-control" name="query" id="query" placeholder="Enter your search query" value="{{ query }}" autofocus>
+        </div>
+    </form>
+    {% if results %}
+        <div class="row mb-3">
+            {% if total > 1 %}
+                <p><a href="javascript:history.back(1)">← Back</a></p>
+            {% endif %}
+            <div class="col-12">
+                <div class="row mb-3">
+                    {% if total > 1 %}
+                    <div class="col-sm-auto my-auto">
+                        Showing results {{ from_ + 1 }}-{{ from_ + results|length }} out of {{ total }}.
+                    </div>
+                    {% endif %}
+
+                    {% if from_ > 1 %}
+                        <div class="col-sm-auto my-auto">
+                            <a href="javascript:history.back(1)" class="btn btn-primary">← Previous page</a>
+                        </div>
+                    {% endif %}
+                    {% if from_ + results|length < total %}
+                        <div class="col-sm-auto my-auto">
+                            <form method="POST">
+                                <input type="hidden" name="query" value="{{ query }}">
+                                <input type="hidden" name="from_" value="{{ from_ + results|length }}">
+                                <button type="submit" class="btn btn-primary">Next page →</button>
+                            </form>
+                        </div>
+                    {% endif %}
+                    <div class="col"></div>
+                </div>
+                {% for result in results %}
+                    <div style="white-space:pre">
+                        {% if result._id %}
+                            Doc id: <b><a href="{{ url_for('get_document', id=result._id) }}">{{ result._id }}</a></b>
+                        {% endif %}
+                        <br>
+                        {% if result._source %}<i>( {{ result._source.message }})</i>
+                        {% elif result %}<i>( {{ result }})</i>
+                        {% endif %}
+                        <br>
+                        <small>
+                            {% if result._score %}<i>(Score: {{ result._score }})</i>{% endif %}
+                        </small>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% elif request.method == 'POST' %}
+        <p>No results found.</p>
+    {% endif %}
+{% endblock %}

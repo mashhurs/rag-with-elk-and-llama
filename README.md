@@ -16,48 +16,49 @@ It leverages Logstash power to generate embeddings and Elasticsearch to store em
   - Clone https://github.com/elastic/start-local.git
   - Run `./start-local.sh`
   - Write down credentials (will need to store in `.env` of the Flask application)
-3) Generate embeddings with Logstash
+3) Generate embeddings
+
   For ingesting data and generate embeddings, use Logstash with [`embeddings_generator` plugin](https://github.com/mashhurs/logstash-filter-embeddings_generator)
+
   Your pipeline may look like this:
-    ```shell
-    input {
-      file {
+
+  ```
+  input {
+    file { # or any other Logstash plugins such as JDBC to fetch data
         path => "/path-to/*/*.txt"
         mode => "read"
         start_position => "beginning"
         ecs_compatibility => "disabled"
       }
+  }
+  filter {
+    mutate {
+        remove_field => "[event][original]"
     }
-    
-    filter {
-        mutate {
-            remove_field => "[event][original]"
-        }
-        embeddings_generator {
-            source => "[message]"
-            target => "embedding"
-            # `path` cane be local model, remote full path or base (example: huggingface pytorch) URL
-            #  `path` examples
-            #   path => "djl://ai.djl.huggingface.pytorch"
-            #   model_name => "BAAI/bge-small-en-v1.5"                    # dimension 384
-            #   model_name => "sentence-transformers/all-MiniLM-L6-v2"    # dimension 384
-            #   model_name => "Trelis/all-MiniLM-L12-v2-ft-Llama-3-70B"   # DJL doesn't support by default, need conversion
-            #   model_name => "eeeyounglee/EEVE-10.8B-mean-4096-4"        # DJL doesn't support by default, need conversion
-            #   downloaded EEVE-10.8B-mean-4096-4 from huggingface and converted into torchscript format
-            #   point to local model
-            path => "/path-to-local/model/EEVE-10.8B-mean-4096-4"
-         }
+    embeddings_generator {
+        source => "[message]"
+        target => "embedding"
+        # `path` cane be local model, remote full path or base (example: huggingface pytorch) URL
+        #  `path` examples
+        #   path => "djl://ai.djl.huggingface.pytorch"
+        #   model_name => "BAAI/bge-small-en-v1.5"                    # dimension 384
+        #   model_name => "sentence-transformers/all-MiniLM-L6-v2"    # dimension 384
+        #   model_name => "Trelis/all-MiniLM-L12-v2-ft-Llama-3-70B"   # DJL doesn't support by default, need conversion
+        #   model_name => "eeeyounglee/EEVE-10.8B-mean-4096-4"        # DJL doesn't support by default, need conversion
+        #   downloaded EEVE-10.8B-mean-4096-4 from huggingface and converted into torchscript format
+        #   point to local model
+        path => "/path-to-local/model/EEVE-10.8B-mean-4096-4"
+     }
+  }
+  output {
+    elasticsearch {
+       ecs_compatibility => "disabled"
+       user => "{username}"
+       password => "{pwd}"
+       index => "{index-to-store-data-and-embeddings}"
     }
-    
-    output {
-        elasticsearch {
-           ecs_compatibility => "disabled"
-           user => "{username}"
-           password => "{pwd}"
-           index => "{index-to-store-data-and-embeddings}"
-        }
-    }
-    ```
+  }
+  ```
 
 ## Run frontend (current flask) application
 - Setup
